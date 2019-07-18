@@ -1,6 +1,7 @@
 classdef LoomoSocket
     %LoomoSocket Communicates with your loomo over WiFi
     %   Detailed explanation wil be filled in here
+    %   Test
     
     % Constants   
     properties (Access = protected)
