@@ -8,6 +8,13 @@ sam = LoomoSocket('192.168.1.10',1337)
 
 sam.open
 
+%% send int
+
+fwrite(sam.t,255, 'uint8')
+
+%% Send string
+
+fwrite(sam.t,['YoYo',char([10])],'uint16')
 %% Echo bits
  a = sam.echoTest()
  
