@@ -15,11 +15,13 @@ classdef LoomoSocket
     end
     
     properties (Access = private, Hidden = true, Constant)
+        ENCODING = 'utf-8'
+        BIT_TYPE = 'uint8'
         WAIT_DELAY = 2; % waitForData
         WAIT_EMPTY = 0.08; % Wait at end of read
         IN_LOOP_WAIT = 0.01; % Pause time in loop to prevent spamming
     end
-    
+        
     methods
         function obj = LoomoSocket(serverIp,serverPort)
             %LoomoSocket(serverIP,serverPort) Construct an instance of this class
@@ -41,49 +43,32 @@ classdef LoomoSocket
             fclose(obj.t);
         end
         
-        function sendString(obj, str)
-           fprintf(obj.t,str); 
+        function sendString(obj, string)
+            bitArray = unicode2native(string,obj.ENCODING);
+            if length(bitArray)<256
+               obj.sendShortBytes(bitArray) 
+            else
+                warning('Loog sting not implemented')
+                warning(string)
+            end
+            
         end
         
-        function answer = echoTest(obj,text)
-            %echoTest Sends string and awaits reply
-            %   Test connection, by sending a string and
-            %   listening for the reply.
-            %
-            %   Needs no arguments
-            %   text (optional) - to send costum string
-            
-            % Check if test string is supplied
-            if nargin<2 || isempty(text)
-                % Create text string
-                text = double(sprintf('Hello World!\nNyLinje'));
-            end
-           fprintf(obj.t,text); 
-           obj.waitForData();
-           
-           answer = obj.readAllBytes()';
-        end
-    end
+    end %Method
+        
+        
     
     methods (Access = protected, Hidden = true)
-        function bitArray = readAllBytes(obj)
-            %readAllBytes Reads until buffer is empty
-            %   Reads TCP input buffer untill empty, wait
-            %   at the end to enshure empty
-            bitArray = [];
-            count = 0;
-           while(obj.t.BytesAvailable)
-               read = fread(obj.t,obj.t.BytesAvailable);
-               if count>0
-                    bitArray= [bitArray; 10; read];
-               else
-                   bitArray= [read];
-               end
-               count = count+1;
-              obj.waitForData(obj.WAIT_EMPTY);
-           end
-        end
         
+        function sendShortBytes(obj,bitArray)
+            l = length(bitArray);
+            if l >255
+                warning('Bit Array to long, use sendLongArray')
+            else
+                fwrite(obj.t,[l, bitArray],obj.BIT_TYPE)
+            end
+        end
+                
         function sucsess = waitForData(obj,delay)
             %waitForData wait a given time (default 2s) for available data
             %   Checks if data is available on socket if data
