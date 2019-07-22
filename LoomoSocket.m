@@ -14,12 +14,30 @@ classdef LoomoSocket
                 % initiaized with a localhost dummy
     end
     
+    %% Settings
     properties (Access = private, Hidden = true, Constant)
         ENCODING = 'utf-8'
         BIT_TYPE = 'uint8'
         WAIT_DELAY = 2; % waitForData
         WAIT_EMPTY = 0.08; % Wait at end of read
         IN_LOOP_WAIT = 0.01; % Pause time in loop to prevent spamming
+    end
+    
+    %% Action ids
+    properties (Access = private, Hidden = true, Constant)
+       A_SPEAK = 'spk'; 
+       A_SPEAK_QUE_DEFAULT = 1; % Play now, (1 play now, 2 play after)
+       A_SPEAK_PITCH_DEFAULT = 1.0;
+       A_VOLUME = 'vol';
+ 
+    end
+    
+    % Respond ID Map
+    properties (Access = private, Hidden = true, Constant)
+        ID_DISCONNECT = 10;
+        ID_YES = 1;
+        ID_NO = 2;
+        ID_READY4DATA = 3;
     end
         
     methods
@@ -40,7 +58,48 @@ classdef LoomoSocket
         function close(obj)
             %close Closes the TCP connection
             %   Closes the TCP connection, takes no arguments
+            obj.sendShortBytes(obj.ID_DISCONNECT)
             fclose(obj.t);
+        end
+        
+        function speak(obj, string, que, pitch)
+            if nargin < 3
+                que = obj.A_SPEAK_QUE_DEFAULT;
+                pitch = obj.A_SPEAK_PITCH_DEFAULT;
+            elseif nargin < 4
+                pitch = obj.A_SPEAK_PITCH_DEFAULT;
+            else
+                % Ensure Que either 1 or 2
+                if que <=1
+                    que = 1;
+                else
+                    que = 2;
+                end
+                pitch = round(pitch,3); % max 3 decimals              
+                
+            end
+            % Convert string to uint
+            raw = uint8(char(string));
+            
+            % generate and send JSON structure
+            jsR.ack = obj.A_SPEAK;
+            jsR.l = length(raw);
+            jsR.q = que;
+            jsR.p = pitch;
+            jsE = jsonencode(jsR);
+            obj.sendString(jsE); %% declare intention
+       
+            obj.sendRaw(raw)
+            
+            
+        end
+        
+        function setVolume(obj,volume)
+           jsR.ack = obj.A_VOLUME;         
+           jsR.v = round(volume,3);
+           jsE = jsonencode(jsR);
+           obj.sendString(jsE);
+           
         end
         
         function sendString(obj, string)
@@ -51,7 +110,6 @@ classdef LoomoSocket
                 warning('Loog sting not implemented')
                 warning(string)
             end
-            
         end
         
     end %Method
@@ -60,6 +118,14 @@ classdef LoomoSocket
     
     methods (Access = protected, Hidden = true)
         
+        function sendRaw(obj,raw)
+            if obj.serverIsReady()
+           fwrite(obj.t,raw) 
+            else
+                warning("Server Not Ready")
+            end
+        end
+        
         function sendShortBytes(obj,bitArray)
             l = length(bitArray);
             if l >255
@@ -67,6 +133,16 @@ classdef LoomoSocket
             else
                 fwrite(obj.t,[l, bitArray],obj.BIT_TYPE)
             end
+        end
+        
+        function ready = serverIsReady(obj)
+           val = fread(obj.t,1);
+           if val == obj.ID_READY4DATA
+               ready = true;
+           else
+               ready = false;
+           end
+            
         end
                 
         function sucsess = waitForData(obj,delay)

@@ -12,8 +12,26 @@ sam.open
 
 
 %% send
-sam.sendString('YoYo')
- 
+sam.sendString('aasdas')
+
+%% set Volume
+sam.setVolume(0.4)
+
+%% Speak
+sam.speak("How are you today")
+
+%% Speak Shaun
+
+sam.speak("Hello Shaun!")
+pause(1.5)
+sam.speak("I have juste learned to talk through Matlab. Now I am ready to conquer the world. I will start by brainwashing the stupid children that aspires to be engineers. Then i will start burning villagers with a slow burning fire, before i level the cities by means of a rain of whales. Have a lovely rest of your life")
+pause(1)
+
+%%
+sam.speak("Hello Christine!")
+pause(1.5)
+sam.speak("I am hungry, do you want to eat soon")
+
  %% Send jasonString
  struct.str = "hello";
  struct.num = 18; 
