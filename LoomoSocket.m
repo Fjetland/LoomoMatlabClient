@@ -34,10 +34,14 @@ classdef LoomoSocket
     
     % Respond ID Map
     properties (Access = private, Hidden = true, Constant)
+        ID_SEND_ID = 1
         ID_DISCONNECT = 10;
         ID_YES = 1;
         ID_NO = 2;
         ID_READY4DATA = 3;
+        ID_STRING_NEXT = 7;
+        
+        ID_RETURNTEST = 31;
     end
         
     methods
@@ -87,7 +91,7 @@ classdef LoomoSocket
             jsR.q = que;
             jsR.p = pitch;
             jsE = jsonencode(jsR);
-            obj.sendString(jsE); %% declare intention
+            obj.sendJsonString(jsE); %% declare intention
        
             obj.sendRaw(raw)
             
@@ -98,12 +102,23 @@ classdef LoomoSocket
            jsR.ack = obj.A_VOLUME;         
            jsR.v = round(volume,3);
            jsE = jsonencode(jsR);
-           obj.sendString(jsE);
+           obj.sendJsonString(jsE);
            
         end
         
         function sendString(obj, string)
-            bitArray = unicode2native(string,obj.ENCODING);
+            bitArray = obj.string2bytes(string);
+            if length(bitArray)<253
+               bitArray = [1, obj.ID_STRING_NEXT, length(bitArray),bitArray];
+               fwrite(obj.t,bitArray)
+            else
+                warning('Loog sting not implemented')
+                warning(string)
+            end
+        end
+        
+        function sendJsonString(obj, string)
+            bitArray = obj.string2bytes(string);
             if length(bitArray)<256
                obj.sendShortBytes(bitArray) 
             else
@@ -112,11 +127,29 @@ classdef LoomoSocket
             end
         end
         
+        function data = returnTestData(obj)
+            fwrite(obj.t,[obj.ID_SEND_ID, obj.ID_RETURNTEST])
+            data = obj.readResponse();
+        end
+        
+        function bytes = string2bytes(obj,string)
+            bytes = unicode2native(string,obj.ENCODING);
+        end
+        
+        function string = bytes2string(obj,bytes)
+            string  = native2unicode(bytes',obj.ENCODING);
+        end
     end %Method
         
         
     
     methods (Access = protected, Hidden = true)
+        
+        function bytes = readResponse(obj)
+           val = fread(obj.t,1);
+           bytes = fread(obj.t,val);
+                      
+        end
         
         function sendRaw(obj,raw)
             if obj.serverIsReady()
@@ -143,37 +176,7 @@ classdef LoomoSocket
                ready = false;
            end
             
-        end
-                
-        function sucsess = waitForData(obj,delay)
-            %waitForData wait a given time (default 2s) for available data
-            %   Checks if data is available on socket if data
-            %   is available it returns true, if timeout returns false
-            %
-            %   Takes one optional argument, delay, which is the desired
-            %   wait time
-            
-            sucsess = true;
-            if nargin < 2
-                delay = obj.WAIT_DELAY; %Max wait time
-                deadlineMax = true;
-            else
-                deadlineMax = false;
-            end
-           pauseStart = tic;
-            %Wait for responce on server
-           while(obj.t.BytesAvailable < 1)
-               pause(obj.IN_LOOP_WAIT)
-               if toc(pauseStart)> delay
-                   if deadlineMax
-                      warning('Timeout in waitForData')
-                      toc(pauseStart)
-                   end
-                   sucsess = false;
-                   return
-               end
-           end
-        end
+        end % fun
     end
 end
 

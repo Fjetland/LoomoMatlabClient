@@ -9,6 +9,10 @@ sam.open
 
  %% Close
  sam.close()
+ 
+ %% Response test
+ data = sam.returnTestData;
+ disp(sam.bytes2string(data))
 
 
 %% send
@@ -18,19 +22,15 @@ sam.sendString('aasdas')
 sam.setVolume(0.4)
 
 %% Speak
-sam.speak("How are you today")
+sam.speak("Happy Birthday to You. Happy Birthday to You. Happy Birthday Dear Shaun. Happy Birthday to You.",1,1)
+
+
+
+%% speak
+sam.speak("I am ready to conquer the world",1,2)
 
 %% Speak Shaun
 
-sam.speak("Hello Shaun!")
-pause(1.5)
-sam.speak("I have juste learned to talk through Matlab. Now I am ready to conquer the world. I will start by brainwashing the stupid children that aspires to be engineers. Then i will start burning villagers with a slow burning fire, before i level the cities by means of a rain of whales. Have a lovely rest of your life")
-pause(1)
-
-%%
-sam.speak("Hello Christine!")
-pause(1.5)
-sam.speak("I am hungry, do you want to eat soon")
 
  %% Send jasonString
  struct.str = "hello";
