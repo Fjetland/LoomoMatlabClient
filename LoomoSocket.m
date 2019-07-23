@@ -25,10 +25,21 @@ classdef LoomoSocket
     
     %% Action ids
     properties (Access = private, Hidden = true, Constant)
+       ACTION = 'ack'
+       
+       A_VELOCITY = 'vel'
+       A_VELOCITY_ANGULAR = 'av'
+       A_VELOCITY_LINEAR = 'v'
+       
        A_SPEAK = 'spk'; 
        A_SPEAK_QUE_DEFAULT = 1; % Play now, (1 play now, 2 play after)
        A_SPEAK_PITCH_DEFAULT = 1.0;
        A_VOLUME = 'vol';
+       
+       A_HEAD = 'hed'
+       A_HEAD_PITCH = 'p'
+       A_HEAD_YAW = 'y'
+       A_HEAD_LIGHT = 'li'
  
     end
     
@@ -42,6 +53,18 @@ classdef LoomoSocket
         ID_STRING_NEXT = 7;
         
         ID_RETURNTEST = 31;
+        
+        %% Commands
+        ID_STOP = 17;
+        
+        % Data requests
+        ID_DATA_SURROUNDINGS = 113;
+        
+        DATA_LBL = 'dat';
+        DATA_TIME_LBL = 't';
+        DATA_SURROUNDINGS_IRLEFT = 'irl';
+        DATA_SURROUNDINGS_IRRIGHT = 'irr';
+        DATA_SURROUNDINGS_ULTRASONIC = 'uss';
     end
         
     methods
@@ -66,6 +89,25 @@ classdef LoomoSocket
             fclose(obj.t);
         end
         
+        function setSpeed(obj, velocity, angularVelocity)
+            jsR.(obj.ACTION) = obj.A_VELOCITY;
+            jsR.(obj.A_VELOCITY_LINEAR) = velocity;
+            jsR.(obj.A_VELOCITY_ANGULAR) = angularVelocity;
+            jsE = jsonencode(jsR);
+            obj.sendJsonString(jsE)
+        end
+               
+        function setHeadPosition(obj, yaw, pitch, light)
+            jsR.(obj.ACTION) = obj.A_HEAD;
+            jsR.(obj.A_HEAD_PITCH) = round(pitch,4);
+            jsR.(obj.A_HEAD_YAW) = round(yaw,4);
+            if nargin>3 && ~isempty(light)
+                jsR.(obj.A_HEAD_LIGHT) = light;
+            end
+            jsE = jsonencode(jsR);
+            obj.sendJsonString(jsE)
+        end
+        
         function speak(obj, string, que, pitch)
             if nargin < 3
                 que = obj.A_SPEAK_QUE_DEFAULT;
@@ -80,22 +122,18 @@ classdef LoomoSocket
                     que = 2;
                 end
                 pitch = round(pitch,3); % max 3 decimals              
-                
             end
             % Convert string to uint
             raw = uint8(char(string));
             
             % generate and send JSON structure
-            jsR.ack = obj.A_SPEAK;
+            jsR.(obj.ACTION) = obj.A_SPEAK;
             jsR.l = length(raw);
             jsR.q = que;
             jsR.p = pitch;
             jsE = jsonencode(jsR);
             obj.sendJsonString(jsE); %% declare intention
-       
             obj.sendRaw(raw)
-            
-            
         end
         
         function setVolume(obj,volume)
@@ -125,6 +163,17 @@ classdef LoomoSocket
                 warning('Loog sting not implemented')
                 warning(string)
             end
+        end
+        
+        function data = getIrAndUltraSound(obj)
+            fwrite(obj.t,[obj.ID_SEND_ID, obj.ID_DATA_SURROUNDINGS])
+            data = obj.readResponse();
+            data = obj.bytes2string(data);
+            data = jsondecode(data);
+        end
+        
+        function stopAllMotion(obj)
+            fwrite(obj.t,[obj.ID_SEND_ID, obj.ID_STOP])
         end
         
         function data = returnTestData(obj)

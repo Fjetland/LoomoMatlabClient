@@ -10,9 +10,32 @@ sam.open
  %% Close
  sam.close()
  
+ %% STOP MOTION
+ 
+ sam.stopAllMotion
+ 
+ %% Velocity command
+ 
+ sam.setSpeed(0.1,0)
+ 
+ sam.setHeadPosition(0,pi/4,11)
+ 
  %% Response test
  data = sam.returnTestData;
  disp(sam.bytes2string(data))
+ 
+ 
+ %sam.setHeadPosition(0,pi/4,11)
+ %% Set head
+ 
+ sam.speak("Only cute robots like me can rotate their head on command",1,1.8)
+ 
+ sam.setHeadPosition(-pi/3,pi/3,11)
+ pause(1)
+ for i = linspace(-pi/3,pi/3,30)
+    sam.setHeadPosition(i,pi/3,randi(13,1))
+    pause(0.2)
+ end
 
 
 %% send
