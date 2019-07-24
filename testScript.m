@@ -5,6 +5,7 @@ clc
 %% Open Connection
 
 sam = LoomoSocket('192.168.1.10',1337)
+sam.t.InputBufferSize = 1000000;
 sam.open
 
  %% Close
@@ -16,15 +17,47 @@ sam.open
  
  %% Velocity command
  
- sam.setSpeed(0.1,0)
- 
- sam.setHeadPosition(0,pi/4,11)
+ sam.setSpeed(0,0)
+
+ %% Head
+ sam.setHeadPosition(pi/2,pi/2,11)
  
  %% Response test
  data = sam.returnTestData;
- disp(sam.bytes2string(data))
+ %disp(sam.bytes2string(data))
  
+ %% Get image
+ clear data
+ data = sam.getImage();
  
+ %% Write image
+ f = figure(1)
+ plot(0,0)
+ ac = gca;
+ %%
+ close all
+ clear data
+ %while 1
+ data = sam.getImage();
+outfile = 'YourFile.jpg';
+fid = fopen(outfile, 'w');
+fwrite(fid, data, 'uint8');
+fclose(fid);
+pause(1)
+
+im = imread(outfile);
+imshow(im)
+
+%pause(0.2)
+% end
+
+%% read image
+
+im = imread(data,'jpg')
+%im = imreconstruct(
+
+%% Decode image
+
  %sam.setHeadPosition(0,pi/4,11)
  %% Set head
  

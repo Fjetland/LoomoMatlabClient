@@ -181,6 +181,11 @@ classdef LoomoSocket
             data = obj.readResponse();
         end
         
+        function data = getImage(obj)
+            fwrite(obj.t,[obj.ID_SEND_ID, obj.ID_RETURNTEST])
+            data = obj.reciveLong();
+        end
+        
         function bytes = string2bytes(obj,string)
             bytes = unicode2native(string,obj.ENCODING);
         end
@@ -193,6 +198,15 @@ classdef LoomoSocket
         
     
     methods (Access = protected, Hidden = true)
+        
+        function bytes = reciveLong(obj)
+           leng = fread(obj.t,1);
+           leng = fread(obj.t,leng);
+           leng = obj.bytes2string(leng);
+           leng = str2double(leng);
+           bytes = fread(obj.t,leng);
+            
+        end
         
         function bytes = readResponse(obj)
            val = fread(obj.t,1);
