@@ -58,7 +58,7 @@ classdef LoomoSocket
         ID_STOP = 17;
         
         % Data requests
-        ID_DATA_SURROUNDINGS = 113;
+        DATA_SURROUNDINGS = 'sSur';
         
         DATA_LBL = 'dat';
         DATA_TIME_LBL = 't';
@@ -141,7 +141,6 @@ classdef LoomoSocket
            jsR.v = round(volume,3);
            jsE = jsonencode(jsR);
            obj.sendJsonString(jsE);
-           
         end
         
         function sendString(obj, string)
@@ -163,6 +162,15 @@ classdef LoomoSocket
                 warning('Loog sting not implemented')
                 warning(string)
             end
+        end
+        
+        function data = getDataResponce(obj, string)
+           query.ack = string;
+           jsQ = jsonencode(query);
+           obj.sendJsonString(jsQ);
+           data = obj.readResponse();
+           data = obj.bytes2string(data);
+           data = jsondecode(data);
         end
         
         function data = getIrAndUltraSound(obj)
@@ -210,8 +218,7 @@ classdef LoomoSocket
         
         function bytes = readResponse(obj)
            val = fread(obj.t,1);
-           bytes = fread(obj.t,val);
-                      
+           bytes = fread(obj.t,val);           
         end
         
         function sendRaw(obj,raw)

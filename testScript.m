@@ -4,100 +4,39 @@ clc
 
 %% Open Connection
 
-sam = LoomoSocket('192.168.1.10',1337)
-sam.t.InputBufferSize = 1000000;
-sam.open
+loomo = Loomo('192.168.1.10',1337)
+loomo.connect()
 
  %% Close
- sam.close()
+ loomo.disconnect()
  
- %% STOP MOTION
+ %% Set volume
  
- sam.stopAllMotion
+ loomo.setVolume(0.5)
  
- %% Velocity command
+ %%  Set head position
  
- sam.setSpeed(0,0)
-
- %% Head
- sam.setHeadPosition(pi/2,pi/2,11)
+ loomo.setHeadPosition(pi/3,0)
  
- %% Response test
- data = sam.returnTestData;
- %disp(sam.bytes2string(data))
  
- %% Get image
- clear data
- data = sam.getImage();
+ %% Enable drive 
+
+ loomo.enableDrive(true)
  
- %% Write image
- f = figure(1)
- plot(0,0)
- ac = gca;
- %%
- close all
- clear data
- %while 1
- data = sam.getImage();
-outfile = 'YourFile.jpg';
-fid = fopen(outfile, 'w');
-fwrite(fid, data, 'uint8');
-fclose(fid);
-pause(1)
-
-im = imread(outfile);
-imshow(im)
-
-%pause(0.2)
-% end
-
-%% read image
-
-im = imread(data,'jpg')
-%im = imreconstruct(
-
-%% Decode image
-
- %sam.setHeadPosition(0,pi/4,11)
- %% Set head
+ %% Set velocity
  
- sam.speak("Only cute robots like me can rotate their head on command",1,1.8)
+ loomo.setVelocity(0,0.3)
  
- sam.setHeadPosition(-pi/3,pi/3,11)
- pause(1)
- for i = linspace(-pi/3,pi/3,30)
-    sam.setHeadPosition(i,pi/3,randi(13,1))
-    pause(0.2)
- end
-
-
-%% send
-sam.sendString('aasdas')
-
-%% set Volume
-sam.setVolume(0.4)
-
-%% Speak
-sam.speak("Happy Birthday to You. Happy Birthday to You. Happy Birthday Dear Shaun. Happy Birthday to You.",1,1)
-
-
-
-%% speak
-sam.speak("I am ready to conquer the world",1,2)
-
-%% Speak Shaun
-
-
- %% Send jasonString
- struct.str = "hello";
- struct.num = 18; 
- struct.array = [2,3,5,6];
- struct.dec = 2.891;
+ %% Set Position
+ loomo.setPosition(0.2,-0.7)
  
- k = jsonencode(struct);
+ %% add positions
+ %loomo.setPosition(0.2,0)
+ loomo.addPositionCheckpoint(-0.5,0)
  
- sam.sendString(k)
- 
+
+ %% speak
+loomo.speakLine('Whazzzza you dawg')
  
  %% Calc avg echoTime
 %   avg = 0;
