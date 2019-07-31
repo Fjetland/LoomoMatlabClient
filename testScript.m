@@ -7,36 +7,36 @@ clc
 loomo = Loomo('192.168.1.10',1337)
 loomo.connect()
 
- %% Close
+%% Close
  loomo.disconnect()
  
- %% Set volume
+%% Set volume
  
  loomo.setVolume(0.5)
  
- %%  Set head position
+%% speak
+loomo.speakLine('Whazzzza you dawg')
+ 
+%%  Set head position
  
  loomo.setHeadPosition(pi/3,0)
  
  
- %% Enable drive 
+%% Enable drive 
 
  loomo.enableDrive(true)
  
- %% Set velocity
+%% Set velocity
  
- loomo.setVelocity(0,0.3)
+ loomo.setVelocity(0.2,0)
  
- %% Set Position
+%% Set Position
  loomo.setPosition(0.2,-0.7)
  
- %% add positions
+%% add positions
  %loomo.setPosition(0.2,0)
  loomo.addPositionCheckpoint(-0.5,0)
  
-
- %% speak
-loomo.speakLine('Whazzzza you dawg')
  
  %% Calc avg echoTime
 %   avg = 0;
