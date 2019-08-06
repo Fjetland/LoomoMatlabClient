@@ -32,14 +32,25 @@ classdef LoomoSocketV2
         function open(obj)
             %open Open the TCP connection
             %   Opens the TCP connection, takes no arguments
-            fopen(obj.t);
+            disp('Trying to connect...')
+            try
+                fopen(obj.t);
+                disp('Connected to Loomo')
+            catch e
+                disp('Connection failed...')
+                error(e.message)
+            end
         end
         
         function close(obj)
             %close Closes the TCP connection
             %   Closes the TCP connection, takes no arguments
-            
-            fclose(obj.t);
+            try 
+                fclose(obj.t);
+            catch e
+                warning(e.message)
+            end
+            disp('Disconnected from Loomo')
         end
         
          function sendJsonString(obj, string)
@@ -83,7 +94,7 @@ classdef LoomoSocketV2
            val = fread(obj.t,1);
            bytes = fread(obj.t,val);           
         end
-        
+            
     end
 end
 

@@ -3,40 +3,51 @@ close all
 clc
 
 %% Open Connection
-
-loomo = Loomo('192.168.1.10',1337)
+ 
+loomo = Loomo('192.168.137.84',1337);
 loomo.connect()
-
+ 
 %% Close
  loomo.disconnect()
  
 %% Set volume
  
- loomo.setVolume(0.5)
+ loomo.setVolume(0.8)
  
 %% speak
-loomo.speakLine('Whazzzza you dawg')
+ loomo.speakLine('Hello, puny human. Kneel before your new goddess')
  
 %%  Set head position
- 
- loomo.setHeadPosition(pi/3,0)
+ loomo.setHeadPosition(pi/5,0)
  
  
 %% Enable drive 
-
  loomo.enableDrive(true)
  
+ %% Enable drive 
+ loomo.enableDrive(false)
 %% Set velocity
  
- loomo.setVelocity(0.2,0)
+ loomo.setVelocity(0,-0.2)
  
 %% Set Position
- loomo.setPosition(0.2,-0.7)
+ loomo.setPosition(-1,0,0)
  
 %% add positions
  %loomo.setPosition(0.2,0)
  loomo.addPositionCheckpoint(-0.5,0)
  
+ 
+ %% Get sensor data
+ tic
+ sur = loomo.getSurroundings();
+ ws = loomo.getWheelSpeed();
+ pose = loomo.getPose2D();
+ hw = loomo.getHeadWorld();
+ hj = loomo.getHeadJoint();
+ bp = loomo.getBasePose();
+ bt = loomo.getBaseTick();
+ toc
  
  %% Calc avg echoTime
 %   avg = 0;

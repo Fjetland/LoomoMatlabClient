@@ -3,10 +3,10 @@ classdef Loomo
     %   Detailed explanation goes here
     
     properties
-        loomoIp    char % Holds server IP
-        loomoPort  double  % Holds serve port
+        loomoIp    char % Loomo Ip adress
+        loomoPort  double  % Loomo communication port
         
-        socket     LoomoSocketV2
+        socket     LoomoSocketV2 % Loomo TCP connection
     end
     
             %% Action ids
@@ -92,12 +92,14 @@ classdef Loomo
         end
         
         function connect(obj)
-            %METHOD1 Summary of this method goes here
-            %   Detailed explanation goes here
+            %connect Connect to Loomo
+            %   Establish a TCP Connection to Loomo
             obj.socket.open()
         end
         
         function disconnect(obj)
+            %DISCONNECT Disconnect from Loomo
+            %   Close TCP connection with Loomo
            obj.socket.close() 
         end
         
@@ -106,6 +108,15 @@ classdef Loomo
         %%%       %%%
         
         function enableDrive(obj, enable)
+            %ENABLEDRIVE Enable or Disable locomotion
+            %   enableDrive(enable) takes a boolean argument, enable,
+            %   and activates (true) or disables and clears (false)
+            %   the locomotion commands for loomo
+            %
+            %   enable: 
+            %       true: Enables drive commands
+            %       false(Default): Disables and clears drive commands
+            
             if islogical(enable)
                 jsR.(obj.ACTION) = obj.A_ENABLE_DRIVE;
                 jsR.(obj.A_ENABLE_DRIVE_VALUE) = enable;
@@ -116,6 +127,16 @@ classdef Loomo
         end
         
         function setVelocity(obj, velocity, angularVelocity)
+            %setVelocity Set angular and linear velocity for 700ms
+            %   setVelocity(velocity, angularVelocity) takes to arguments,
+            %   velocity and angularVelocity, and sets the desired loomo
+            %   velocities for the next 700ms. To sustain this speed over a
+            %   longer periode the command needs to be repeated within the
+            %   given time frame.
+            %
+            %   velocity: Linear Velocity in m/s [-4 to 4]
+            %   angularVelocity: CCW Angular velocity in rad/s
+            
             jsR.(obj.ACTION) = obj.A_VELOCITY;
             jsR.(obj.A_VELOCITY_LINEAR) = velocity;
             jsR.(obj.A_VELOCITY_ANGULAR) = angularVelocity;
@@ -125,23 +146,22 @@ classdef Loomo
         end
         
         function setPosition(obj,x,y, th)
+            %setPosition Move Loomo to absolute pose from current pose
+            %   setPosition(x,y) moves Loomo to the absolute position [x,y]
+            %   in meters, based on it's current referance frame. 
+            %   
+            %   setPosition(x,y,th) moves Loomo to the absolute pose 
+            %   and rotation [x, y, th], in metters and radians, based on 
+            %   it's current referance frame.
+            %
+            %   Loomo coordinate system:
+            %       x-axis: Positive in front of Loomo
+            %       y-axis: Positve to the left
+            %       th: CCW rotation in radians around its own z-axis
+            %
             jsR.(obj.ACTION) = obj.A_POSITION;
             jsR.(obj.A_POSITION_X) = x;
             jsR.(obj.A_POSITION_Y) = y;
-            if nargin > 3
-               jsR.(obj.A_POSITION_TH) = th;
-            end
-            
-            jsE = jsonencode(jsR);
-            obj.socket.sendJsonString(jsE)
-        end
-        
-        function addPositionCheckpoint(obj, x, y, th)
-            jsR.(obj.ACTION) = obj.A_POSITION;
-            jsR.(obj.A_POSITION_X) = x;
-            jsR.(obj.A_POSITION_Y) = y;
-            jsR.(obj.A_POSITION_ADD) = true;
-            
             if nargin > 3
                jsR.(obj.A_POSITION_TH) = th;
             end
@@ -176,6 +196,65 @@ classdef Loomo
            obj.socket.sendJsonString(jsE);
         end
         
+        %         function addPositionCheckpoint(obj, x, y, th)
+%             jsR.(obj.ACTION) = obj.A_POSITION;
+%             jsR.(obj.A_POSITION_X) = x;
+%             jsR.(obj.A_POSITION_Y) = y;
+%             jsR.(obj.A_POSITION_ADD) = true;
+%             
+%             if nargin > 3
+%                jsR.(obj.A_POSITION_TH) = th;
+%             end
+%             
+%             jsE = jsonencode(jsR);
+%             obj.socket.sendJsonString(jsE)
+%         end
+
+
+        %%%       %%%
+        %  Sensors  %
+        %%%       %%%
+        
+        function data = getSurroundings(obj)
+           data = obj.getData(obj.D_SURROUNDINGS);
+        end
+        
+        function data = getWheelSpeed(obj)
+           data = obj.getData(obj.D_WHEEL_SPEED);
+        end
+        
+        function data = getPose2D(obj)
+           data = obj.getData(obj.D_POSE2D);
+        end
+        
+        function data = getHeadWorld(obj)
+           data = obj.getData(obj.D_HEAD_WORLD);
+        end
+        
+        function data = getHeadJoint(obj)
+           data = obj.getData(obj.D_HEAD_JOINT);
+        end
+        
+        function data = getBasePose(obj)
+           data = obj.getData(obj.D_BASE_POSE);
+        end
+        
+        function data = getBaseTick(obj)
+           data = obj.getData(obj.D_BASE_TICK);
+        end
+        
+    end
+    
+    
+    methods (Access = private)
+        
+        function data = getData(obj,string)
+            jsR.(obj.ACTION) = string;
+           jsE = jsonencode(jsR);
+           obj.socket.sendJsonString(jsE)
+           data = obj.socket.reciveJsonString();
+           data = jsondecode(data);
+        end
     end
 end
 
