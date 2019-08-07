@@ -3,68 +3,52 @@ close all
 clc
 
 %% Open Connection
-
-sam = LoomoSocket('192.168.1.10',1337)
-sam.open
-
- %% Close
- sam.close()
  
- %% STOP MOTION
+loomo = Loomo('192.168.137.84',1337);
+loomo.connect()
  
- sam.stopAllMotion
+%% Close
+ loomo.disconnect()
  
- %% Velocity command
+%% Set volume
  
- sam.setSpeed(0.1,0)
+ loomo.setVolume(0.4)
  
- sam.setHeadPosition(0,pi/4,11)
- 
- %% Response test
- data = sam.returnTestData;
- disp(sam.bytes2string(data))
- 
- 
- %sam.setHeadPosition(0,pi/4,11)
- %% Set head
- 
- sam.speak("Only cute robots like me can rotate their head on command",1,1.8)
- 
- sam.setHeadPosition(-pi/3,pi/3,11)
- pause(1)
- for i = linspace(-pi/3,pi/3,30)
-    sam.setHeadPosition(i,pi/3,randi(13,1))
-    pause(0.2)
- end
-
-
-%% send
-sam.sendString('aasdas')
-
-%% set Volume
-sam.setVolume(0.4)
-
-%% Speak
-sam.speak("Happy Birthday to You. Happy Birthday to You. Happy Birthday Dear Shaun. Happy Birthday to You.",1,1)
-
-
-
 %% speak
-sam.speak("I am ready to conquer the world",1,2)
-
-%% Speak Shaun
-
-
- %% Send jasonString
- struct.str = "hello";
- struct.num = 18; 
- struct.array = [2,3,5,6];
- struct.dec = 2.891;
+ loomo.speakLine('Hello, puny human. Kneel before your new goddess')
  
- k = jsonencode(struct);
+%%  Set head position
+ loomo.setHeadPosition(pi/5,0)
+
+ %% set head and light
+ loomo.setHeadPosition(pi/5,0,10)
  
- sam.sendString(k)
+%% Enable drive 
+ loomo.enableDrive(true)
  
+ %% Enable drive 
+ loomo.enableDrive(false)
+%% Set velocity
+ 
+ loomo.setVelocity(0,-0.4)
+ 
+%% Set Position
+ loomo.setPosition(1.2,0.2,pi/2)
+ 
+%% add positions
+ %loomo.setPosition(0.2,0)
+ 
+ 
+ %% Get sensor data
+ tic
+ sur = loomo.getSurroundings();
+ ws = loomo.getWheelSpeed();
+ pose = loomo.getPose2D();
+ hw = loomo.getHeadWorld();
+ hj = loomo.getHeadJoint();
+ bp = loomo.getBaseImu();
+ bt = loomo.getBaseTick();
+ toc
  
  %% Calc avg echoTime
 %   avg = 0;
