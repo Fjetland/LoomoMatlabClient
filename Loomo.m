@@ -6,7 +6,7 @@ classdef Loomo
         loomoIp    char % Loomo Ip adress
         loomoPort  double  % Loomo communication port
         
-        socket     LoomoSocketV2 % Loomo TCP connection
+        socket     LoomoSocket % Loomo TCP connection
     end
     
             %% Action ids
@@ -53,7 +53,7 @@ classdef Loomo
         D_POSE2D = 'sP2d';
         D_HEAD_WORLD = 'sHPw';
         D_HEAD_JOINT = 'sHPj';
-        D_BASE_POSE = 'sBP';
+        D_BASE_IMU = 'sBP';
         D_BASE_TICK = 'sBT';
         
         % Data labels
@@ -70,9 +70,9 @@ classdef Loomo
         D_POSE2D_VA = 'va';
         D_BASE_TICK_L = 'l';
         D_BASE_TICK_R = 'r';
-        D_BASE_POSE_PITCH = 'p';
-        D_BASE_POSE_ROLL = 'r';
-        D_BASE_POSE_YAW = 'p';
+        D_BASE_IMU_PITCH = 'p';
+        D_BASE_IMU_ROLL = 'r';
+        D_BASE_IMU_YAW = 'y';
         D_HEAD_PITCH = 'p';
         D_HEAD_ROLL = 'r';
         D_HEAD_YAW = 'y';
@@ -87,7 +87,7 @@ classdef Loomo
             %   Detailed explanation goes here
             obj.loomoIp = loomoIp;
             obj.loomoPort = loomoPort;
-            obj.socket = LoomoSocketV2(loomoIp,loomoPort);
+            obj.socket = LoomoSocket(loomoIp,loomoPort);
             obj.socket.t.InputBufferSize = 1000000;
         end
         
@@ -170,16 +170,29 @@ classdef Loomo
             obj.socket.sendJsonString(jsE)
         end
         
-        function setHeadPosition(obj, yaw, pitch)
+        function setHeadPosition(obj, yaw, pitch, light)
+            %setHeadPosition Sets the head position
+            %   Sets the head position with yaw and pitch given in radiens.
+            %
+            %   Limits:
+            %       Pitch: -Pi/2 to PI (-90 to 180 deg)
+            %       Yaw: -Pi/1.2 to Pi/1.2 (-150 to 150 deg)
+            %
             jsR.(obj.ACTION) = obj.A_HEAD;
             jsR.(obj.A_HEAD_PITCH) = round(pitch,4);
             jsR.(obj.A_HEAD_YAW) = round(yaw,4);
+            
+            if nargin > 3
+               jsR.(obj.A_HEAD_LIGHT) = light; 
+            end
 
             jsE = jsonencode(jsR);
             obj.socket.sendJsonString(jsE)
         end
         
         function speakLine(obj,string)
+            %speakLine Make Loomo speak
+            %   Sends a string of text in english for the loomo to speak.
             jsR.(obj.ACTION) = obj.A_SPEAK;
             jsR.(obj.A_SPEAK_LENGTH) = length(string);
             
@@ -189,6 +202,8 @@ classdef Loomo
         end
         
         function setVolume(obj,volume)
+           %setVolume Set volume level of loomo speaker
+           %    Volume range 0.0 to 1.0
            jsR.ack = obj.A_VOLUME;         
            jsR.v = round(volume,3);
            jsE = jsonencode(jsR);
@@ -196,7 +211,7 @@ classdef Loomo
            obj.socket.sendJsonString(jsE);
         end
         
-        %         function addPositionCheckpoint(obj, x, y, th)
+%         function addPositionCheckpoint(obj, x, y, th)
 %             jsR.(obj.ACTION) = obj.A_POSITION;
 %             jsR.(obj.A_POSITION_X) = x;
 %             jsR.(obj.A_POSITION_Y) = y;
@@ -216,30 +231,113 @@ classdef Loomo
         %%%       %%%
         
         function data = getSurroundings(obj)
+            %getSurroundings Returns a struct with Infrared and Ultrasonic distance
+            %
+            %   Structure:
+            %   Var  | Value  | Description
+            %   -----|--------|-------------
+            %   irl  | mm     | Left infrared sensor
+            %   irr  | mm     | Right infrared sensor 
+            %   uss  | mm     | Forward ultrasonic sensor
+            %
+            %   The infrared sensors are pointed at a downwards angle and 
+            %   designed to detect obstacles in the driving path.
+            %
+            %   The ultrasonic sensor is designed to detect obstacles 
+            %   and avoid collisions. The ultrasonic sensor is mounted in 
+            %   the front of Loomo, with a detection distance from 
+            %   250 millimeters to 1500 millimeters and an angle beam of 
+            %   40 degrees.
+            %
+            %   NOTE: There is a known issue that when the distance between 
+            %   the obstacle and the ultrasonic sensor is less than 
+            %   250 millimeters, an incorrect value may be returned.
            data = obj.getData(obj.D_SURROUNDINGS);
         end
         
         function data = getWheelSpeed(obj)
+            %getWheelSpeed Returns the individual wheel speed in m/s
+            %
+            %   Structure:
+            %   Var  | Value  | Description
+            %   -----|--------|-------------
+            %   vl   | m/s    | Left wheel velocity
+            %   vr   | m/s    | Right wheel velocity
+            %
            data = obj.getData(obj.D_WHEEL_SPEED);
         end
         
         function data = getPose2D(obj)
+            %getPose2D Returns base pose and velocity
+            %   Pose is relative to start position or last Pose reset.
+            %   Pose is reset in set position and at start
+            %
+            %   Structure:
+            %   Var  | Value  | Description
+            %   -----|--------|-------------
+            %   x   | m      | x - displacment
+            %   y   | m      | y - displacement
+            %   th  | rad    | Rotational displacment
+            %   vl  | m/s    | Linear velocity
+            %   va  | rad/s  | Angular velocity
+            %
            data = obj.getData(obj.D_POSE2D);
         end
         
         function data = getHeadWorld(obj)
+            %getHeadWorld Returns the head world position
+            %   Measured by the internal head IMU (Inertial Measurement Unit)
+            %
+            %   Structure:
+            %   Var  | Value  | Description
+            %   -----|--------|-------------
+            %   p    | rad    | Pitch
+            %   r    | rad    | Roll
+            %   y    | rad    | Yaw
+            %
            data = obj.getData(obj.D_HEAD_WORLD);
         end
         
         function data = getHeadJoint(obj)
+            %getHeadWorld Returns the head joint position
+            %   Measured by the joints to the base. Position relative to
+            %   base
+            %
+            %   Structure:
+            %   Var  | Value  | Description
+            %   -----|--------|-------------
+            %   p    | rad    | Pitch
+            %   r    | rad    | Roll
+            %   y    | rad    | Yaw
+            %
            data = obj.getData(obj.D_HEAD_JOINT);
         end
         
-        function data = getBasePose(obj)
-           data = obj.getData(obj.D_BASE_POSE);
+        function data = getBaseImu(obj)
+            %getHeadWorld Returns the head joint position
+            %   Measured by the joints to the base. Position relative to
+            %   base
+            %
+            %   Structure:
+            %   Var  | Value  | Description
+            %   -----|--------|-------------
+            %   p    | rad    | Pitch
+            %   r    | rad    | Roll
+            %   y    | rad    | Yaw
+            %
+           data = obj.getData(obj.D_BASE_IMU);
         end
         
         function data = getBaseTick(obj)
+            %getBaseTick Returns the measured encoder wheel position.
+            %   1 tick is ~1cm on correctly inflated wheels.
+            %
+            %   Structure:
+            %   Var  | Value  | Description
+            %   -----|--------|-------------
+            %   l    | tick   | Left wheel
+            %   r    | tick   | Right wheel
+            %
            data = obj.getData(obj.D_BASE_TICK);
         end
         

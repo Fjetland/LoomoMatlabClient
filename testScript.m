@@ -12,14 +12,16 @@ loomo.connect()
  
 %% Set volume
  
- loomo.setVolume(0.8)
+ loomo.setVolume(0.4)
  
 %% speak
  loomo.speakLine('Hello, puny human. Kneel before your new goddess')
  
 %%  Set head position
  loomo.setHeadPosition(pi/5,0)
- 
+
+ %% set head and light
+ loomo.setHeadPosition(pi/5,0,10)
  
 %% Enable drive 
  loomo.enableDrive(true)
@@ -28,14 +30,13 @@ loomo.connect()
  loomo.enableDrive(false)
 %% Set velocity
  
- loomo.setVelocity(0,-0.2)
+ loomo.setVelocity(0,-0.4)
  
 %% Set Position
- loomo.setPosition(-1,0,0)
+ loomo.setPosition(1.2,0.2,pi/2)
  
 %% add positions
  %loomo.setPosition(0.2,0)
- loomo.addPositionCheckpoint(-0.5,0)
  
  
  %% Get sensor data
@@ -45,7 +46,7 @@ loomo.connect()
  pose = loomo.getPose2D();
  hw = loomo.getHeadWorld();
  hj = loomo.getHeadJoint();
- bp = loomo.getBasePose();
+ bp = loomo.getBaseImu();
  bt = loomo.getBaseTick();
  toc
  
