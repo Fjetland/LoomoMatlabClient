@@ -10,9 +10,16 @@ loomo.connect()
 %% Close
  loomo.disconnect()
  
+ %% Get image
+ 
+ tic
+ img = loomo.getImage();
+ imshow(img)
+ toc
+ 
 %% Set volume
  
- loomo.setVolume(0.4)
+ loomo.setVolume(0.8)
  
 %% speak
  loomo.speakLine('Hello, puny human. Kneel before your new goddess')
@@ -30,10 +37,10 @@ loomo.connect()
  loomo.enableDrive(false)
 %% Set velocity
  
- loomo.setVelocity(0,-0.4)
+ loomo.setVelocity(0,0.5)
  
 %% Set Position
- loomo.setPosition(1.2,0.2,pi/2)
+ loomo.setPosition(0,0,0)
  
 %% add positions
  %loomo.setPosition(0.2,0)

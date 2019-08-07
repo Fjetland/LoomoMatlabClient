@@ -47,6 +47,8 @@ classdef Loomo
     properties (Access = private, Hidden = true, Constant)
         D_DATA_LBL = 'dat';
         
+        D_IMAGE = 'img';
+        
         % Data return types
         D_SURROUNDINGS = 'sSur';
         D_WHEEL_SPEED = 'sWS';
@@ -341,6 +343,15 @@ classdef Loomo
            data = obj.getData(obj.D_BASE_TICK);
         end
         
+        function img = getImage(obj)
+           meta = obj.getData(obj.D_IMAGE);
+           
+           raw = obj.socket.readLongByteArray(meta.size);
+           
+           img = obj.convertByte2Image(raw,640,480);
+           
+        end
+        
     end
     
     
@@ -353,6 +364,15 @@ classdef Loomo
            data = obj.socket.reciveJsonString();
            data = jsondecode(data);
         end
+        
+        function img = convertByte2Image(~,raw, w, h)
+            l = length(raw);
+            img(:,:,1) = reshape(raw(1:3:l),[w,h]);
+            img(:,:,2) = reshape(raw(2:3:l),[w,h]);
+            img(:,:,3) = reshape(raw(3:3:l),[w,h]);
+            img = img/255;
+            img = permute(img,[2,1,3]);
+         end
     end
 end
 
