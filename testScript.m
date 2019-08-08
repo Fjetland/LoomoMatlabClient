@@ -13,13 +13,17 @@ loomo.connect()
  %% Get image
  
  tic
- img = loomo.getImage();
- imshow(img)
+ img = loomo.getImage(2);
+ %imshow(img)
  toc
+
+ % depth image
+ waterfall(-img)
+ view(gca,[208.962140992167 71.0147601476015]);
  
 %% Set volume
  
- loomo.setVolume(0.8)
+ loomo.setVolume(0.6)
  
 %% speak
  loomo.speakLine('Hello, puny human. Kneel before your new goddess')
@@ -36,11 +40,10 @@ loomo.connect()
  %% Enable drive 
  loomo.enableDrive(false)
 %% Set velocity
- 
- loomo.setVelocity(0,0.5)
+ loomo.setVelocity(-0.5,0)
  
 %% Set Position
- loomo.setPosition(0,0,0)
+ loomo.setPosition(1,0,0)
  
 %% add positions
  %loomo.setPosition(0.2,0)
@@ -48,13 +51,13 @@ loomo.connect()
  
  %% Get sensor data
  tic
- sur = loomo.getSurroundings();
- ws = loomo.getWheelSpeed();
- pose = loomo.getPose2D();
- hw = loomo.getHeadWorld();
- hj = loomo.getHeadJoint();
- bp = loomo.getBaseImu();
- bt = loomo.getBaseTick();
+ sur = loomo.getSurroundings()
+ ws = loomo.getWheelSpeed()
+ pose = loomo.getPose2D()
+ hw = loomo.getHeadWorld()
+ hj = loomo.getHeadJoint()
+ bp = loomo.getBaseImu()
+ bt = loomo.getBaseTick()
  toc
  
  %% Calc avg echoTime
