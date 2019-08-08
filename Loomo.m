@@ -16,6 +16,9 @@ classdef Loomo
        A_ENABLE_DRIVE = 'enableDrive'
        A_ENABLE_DRIVE_VALUE = 'value'
        
+       A_ENABLE_VISION = 'enableVision'
+       
+       
        A_VELOCITY = 'vel'
        A_VELOCITY_ANGULAR = 'av'
        A_VELOCITY_LINEAR = 'v'
@@ -348,6 +351,21 @@ classdef Loomo
            data = obj.getData(obj.D_BASE_TICK);
         end
         
+        function enableVision(obj, colorSmall, colorLarge, depth)
+            test = [islogical(colorSmall),islogical(colorLarge),...
+                    islogical(depth)];
+           if ~all(test)
+               error("Values must be logical")
+           end
+           jsR.(obj.ACTION) = obj.A_ENABLE_VISION;
+           jsR.(obj.D_IMAGE_TYPE_COLOR) = colorLarge;
+           jsR.(obj.D_IMAGE_TYPE_COLOR_SMALL) = colorSmall;
+           jsR.(obj.D_IMAGE_TYPE_DEPTH) = depth;
+           
+           jsE = jsonencode(jsR);
+           obj.socket.sendJsonString(jsE)
+        end
+        
         function img = getImage(obj,type)
             %getImage Return an image of given type from Loomo
             %   Recives and formats a single image frame from the loomo
@@ -395,7 +413,7 @@ classdef Loomo
     
     methods (Access = private)
         function data = getData(obj,string)
-            jsR.(obj.ACTION) = string;
+           jsR.(obj.ACTION) = string;
            jsE = jsonencode(jsR);
            obj.socket.sendJsonString(jsE)
            data = obj.socket.reciveJsonString();

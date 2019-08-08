@@ -10,6 +10,12 @@ loomo.connect()
 %% Close
  loomo.disconnect()
  
+ %% Enable camera
+ loomo.enableVision(true,true,true)
+
+  %% Disable camera
+ loomo.enableVision(false,false,false)
+
  %% Get image
  
  tic
