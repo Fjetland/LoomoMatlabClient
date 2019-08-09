@@ -5,7 +5,7 @@ clc
 %% Open Connection
  
 loomo = Loomo('192.168.137.84',1337);
-loomo.connect()
+%loomo.connect()
  
 %% Close
  loomo.disconnect()
