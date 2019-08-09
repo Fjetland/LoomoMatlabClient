@@ -16,6 +16,9 @@ classdef Loomo
        A_ENABLE_DRIVE = 'enableDrive'
        A_ENABLE_DRIVE_VALUE = 'value'
        
+       A_ENABLE_VISION = 'enableVision'
+       
+       
        A_VELOCITY = 'vel'
        A_VELOCITY_ANGULAR = 'av'
        A_VELOCITY_LINEAR = 'v'
@@ -46,6 +49,13 @@ classdef Loomo
             %% Data ids
     properties (Access = private, Hidden = true, Constant)
         D_DATA_LBL = 'dat';
+        
+        D_IMAGE = 'img';
+        
+        D_IMAGE_TYPE = 'type';
+        D_IMAGE_TYPE_COLOR = 'Color';
+        D_IMAGE_TYPE_COLOR_SMALL = 'ColorSmall'
+        D_IMAGE_TYPE_DEPTH = 'Depth'
         
         % Data return types
         D_SURROUNDINGS = 'sSur';
@@ -341,18 +351,93 @@ classdef Loomo
            data = obj.getData(obj.D_BASE_TICK);
         end
         
+        function enableVision(obj, colorSmall, colorLarge, depth)
+            test = [islogical(colorSmall),islogical(colorLarge),...
+                    islogical(depth)];
+           if ~all(test)
+               error("Values must be logical")
+           end
+           jsR.(obj.ACTION) = obj.A_ENABLE_VISION;
+           jsR.(obj.D_IMAGE_TYPE_COLOR) = colorLarge;
+           jsR.(obj.D_IMAGE_TYPE_COLOR_SMALL) = colorSmall;
+           jsR.(obj.D_IMAGE_TYPE_DEPTH) = depth;
+           
+           jsE = jsonencode(jsR);
+           obj.socket.sendJsonString(jsE)
+        end
+        
+        function img = getImage(obj,type)
+            %getImage Return an image of given type from Loomo
+            %   Recives and formats a single image frame from the loomo
+            %
+            %   type:
+            %       0 - Color small 320x240 (Default)
+            %       1 - Color large 640x480
+            %       2 - Depth       320x240
+            
+            jsR.(obj.ACTION) = obj.D_IMAGE; %Set image action label
+            if nargin < 2
+                type = 0; % If type is not specified set to '0'
+            end
+            
+            % Match type with protocole
+            switch type
+                case 1
+                    jsR.(obj.D_IMAGE_TYPE) = obj.D_IMAGE_TYPE_COLOR;
+                case 2
+                    jsR.(obj.D_IMAGE_TYPE) = obj.D_IMAGE_TYPE_DEPTH;
+                otherwise
+                    jsR.(obj.D_IMAGE_TYPE) = obj.D_IMAGE_TYPE_COLOR_SMALL;
+            end
+            jsE = jsonencode(jsR); % Encode structure to json string
+            
+            obj.socket.sendJsonString(jsE); % Send json to Loomo
+            meta = obj.socket.reciveJsonString(); % Recive image metadata
+            meta = jsondecode(meta); % Decode Image Metadata
+           raw = obj.socket.readLongByteArray(meta.size); % Recive image bytes
+           
+           % If image sice is less than 10, no image has been recived
+           if meta.size > 10 
+               
+               %Convert byte array to image
+               img = obj.convertByte2Image(raw,meta.width,meta.height, type~=2);
+           else
+               %Throw warning
+               img = 0;
+               warning('Error in reciving image')
+           end
+        end
+        
     end
     
     
     methods (Access = private)
-        
         function data = getData(obj,string)
-            jsR.(obj.ACTION) = string;
+           jsR.(obj.ACTION) = string;
            jsE = jsonencode(jsR);
            obj.socket.sendJsonString(jsE)
            data = obj.socket.reciveJsonString();
            data = jsondecode(data);
         end
+        
+        function img = convertByte2Image(~,raw, w, h, color)
+            if color
+            l = length(raw);
+                img = zeros(w,h,3);
+                img(:,:,1) = reshape(raw(1:3:l),[w,h]);
+                img(:,:,2) = reshape(raw(2:3:l),[w,h]);
+                img(:,:,3) = reshape(raw(3:3:l),[w,h]);
+                img = img/255;
+                img = permute(img,[2,1,3]);
+            else
+                bits = reshape(raw,[2,length(raw)/2]); % Rearange higer and lower order bits
+                img = bitor(bitshift(bits(1,:),8),bits(2,:)); % Shift and combine bits
+                img = reshape(img,w,h); % Reshape to image form
+                img = permute(img,[2,1]); % Rotate 90deg
+                %img = img / hex2dec('FFFF'); % Scale to double
+                %img(img<255) = nan%hex2dec('FFFF'); % Move noice to the distance
+            end
+         end
     end
 end
 

@@ -71,6 +71,10 @@ classdef LoomoSocket
             bytes = obj.string2bytes(string);
             fwrite(obj.t,bytes,obj.BIT_TYPE)
          end
+         
+         function bytes = readLongByteArray(obj, length)
+            bytes = fread(obj.t,length); 
+         end
         
     end
     
