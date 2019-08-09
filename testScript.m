@@ -11,28 +11,49 @@ loomo.connect()
  loomo.disconnect()
  
  %% Enable camera
- loomo.enableVision(true,true,true)
+ loomo.enableVision(true,false,true)
 
   %% Disable camera
  loomo.enableVision(false,false,false)
 
+ %%
+ f2 = figure('Position',[50,50,1200,800],'Name','3D-Plot')
  %% Get image
- 
+ %close all
  tic
- img = loomo.getImage(2);
- %imshow(img)
+ imgd = loomo.getImage(2);
+ img = loomo.getImage(0);
  toc
 
- % depth image
- waterfall(-img)
- view(gca,[208.962140992167 71.0147601476015]);
+pc = depthImageToPointCloud(imgd,img);
+
+figure(1)
+
+pc2 = pcdenoise(pc);
+pcshow(pc, 'VerticalAxis','Z', 'VerticalAxisDir', 'Up')
+set(gca,'CameraPosition',...
+    [-40.6449840206409 17.7065768099007 15.6358440242711],'CameraTarget',...
+    [2.10383901044505 0.872518623187423 -0.186464174545933],'CameraUpVector',...
+    [0.325375837966884 -0.135417330350011 0.935837972465439],'Color',[0 0 0],...
+    'DataAspectRatio',[1 1 1],'XColor',[0.8 0.8 0.8],'YColor',[0.8 0.8 0.8],...
+    'ZColor',[0.8 0.8 0.8]);
+ 
+
+figure(2)
+pcshow(pc, 'VerticalAxis','Z', 'VerticalAxisDir', 'Up')
+set(gca,'CameraPosition',...
+    [-40.6449840206409 17.7065768099007 15.6358440242711],'CameraTarget',...
+    [2.10383901044505 0.872518623187423 -0.186464174545933],'CameraUpVector',...
+    [0.325375837966884 -0.135417330350011 0.935837972465439],'Color',[0 0 0],...
+    'DataAspectRatio',[1 1 1],'XColor',[0.8 0.8 0.8],'YColor',[0.8 0.8 0.8],...
+    'ZColor',[0.8 0.8 0.8]);
  
 %% Set volume
  
- loomo.setVolume(0.6)
+ loomo.setVolume(0.3)
  
 %% speak
- loomo.speakLine('Hello, puny human. Kneel before your new goddess')
+ loomo.speakLine('Bye')
  
 %%  Set head position
  loomo.setHeadPosition(pi/5,0)
@@ -46,15 +67,40 @@ loomo.connect()
  %% Enable drive 
  loomo.enableDrive(false)
 %% Set velocity
- loomo.setVelocity(-0.5,0)
+ loomo.setVelocity(0,-0.2)
  
 %% Set Position
- loomo.setPosition(1,0,0)
+ loomo.setPosition(0,0,0)
  
-%% add positions
- %loomo.setPosition(0.2,0)
+ %% Start Drive and look
+ close all
+ f2 = figure('Position',[50,50,1500,800],'Name','3D-Plot')
+ ax = gca;
+ loomo.enableDrive(true)
+ loomo.enableVision(true,false,true)
+ imgd = loomo.getImage(2);
+ img = loomo.getImage(0);
+%% Drive and Look
+ tic
+ loomo.setVelocity(0,-0)
+ pause(0)
+ imgd = loomo.getImage(2);
+ img = loomo.getImage(0);
+
+subplot(1,3,1)
+imshow(img)
  
- 
+% subplot(1,3,2:3)
+% pc = depthImageTestScript(imgd,img);
+% pcshow(pc, 'VerticalAxis','Z', 'VerticalAxisDir', 'Up')
+% set(gca,'CameraPosition',...
+%     [-40.6449840206409 17.7065768099007 15.6358440242711],'CameraTarget',...
+%     [2.10383901044505 0.872518623187423 -0.186464174545933],'CameraUpVector',...
+%     [0.325375837966884 -0.135417330350011 0.935837972465439],'Color',[0 0 0],...
+%     'DataAspectRatio',[1 1 1],'XColor',[0.8 0.8 0.8],'YColor',[0.8 0.8 0.8],...
+%     'ZColor',[0.8 0.8 0.8]);
+%  
+toc
  %% Get sensor data
  tic
  sur = loomo.getSurroundings()

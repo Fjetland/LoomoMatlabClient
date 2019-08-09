@@ -434,8 +434,8 @@ classdef Loomo
                 img = bitor(bitshift(bits(1,:),8),bits(2,:)); % Shift and combine bits
                 img = reshape(img,w,h); % Reshape to image form
                 img = permute(img,[2,1]); % Rotate 90deg
-                img = img / hex2dec('FFFF'); % Scale to double
-                img(img<0.10) = 1; % Move noice to the distance
+                %img = img / hex2dec('FFFF'); % Scale to double
+                %img(img<255) = nan%hex2dec('FFFF'); % Move noice to the distance
             end
          end
     end
