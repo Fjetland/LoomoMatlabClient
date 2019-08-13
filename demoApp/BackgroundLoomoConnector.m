@@ -10,6 +10,23 @@ classdef BackgroundLoomoConnector < handle
         lastTic = 0;
         dt = 0;
         
+        % Commands
+        newVolume = false;
+        volume = 0.5;
+        
+        % Speak
+        newSpeak = false;
+        speakString
+        
+        % EnableDrive
+        newEnableDrive = false;
+        enableDriveValue = false;
+        
+        % enableImage
+        newEnableImages = false;
+        colorFast = false;
+        colorLarge = false;
+        depth = false;
         
         % Drive on keys
         driveOnKeys = false;
@@ -23,13 +40,26 @@ classdef BackgroundLoomoConnector < handle
         readVelocity = false;
         readSurroundings = false;
         
-        % Status
-        velocity = nan;
-        turnRate = nan;
+        % Image
+        getImage = 0; % 0 = none, 1 = color fast, 2 = color large, 3 = depth
+        getImage2 = 0;
+        imgFreq = 2;
+        imgCount = 0;
+        imgData = [0,0,0];
+        imgData2 = [0,0,0];
+        fetchImage = false;
         
-        ir_left = nan;
-        ir_right =nan;
-        uss = nan;
+        % Pose 2D
+        velocity = 0;
+        turnRate = 0;
+        xBase = 0;
+        yBase = 0;
+        thBase = 0;
+        
+        % Surroundings
+        ir_left = 0;
+        ir_right = 0;
+        uss = 0;
     end
     
     properties % ToBe Private
@@ -100,9 +130,11 @@ classdef BackgroundLoomoConnector < handle
             end
         end
         
-        function checkError(obj)
+        function bool = checkError(obj)
+            bool = false;
            if ~isempty(obj.worker.Error)
-               error(obj.worker.Error)
+               disp(obj.worker)
+               bool = true;
            end
         end
         
@@ -123,25 +155,52 @@ classdef BackgroundLoomoConnector < handle
         
         function enableDrive(obj, bool)
             %obj.waitUntilDone();
-            obj.getMainResults();
             obj.worker = parfeval(obj.cpuPool,...
                 @obj.par_enableDrive,0,obj.loomo, bool);
-            obj.runMainLoop()
-            
         end
         
         function enableVision(obj,color,colorLarge, depth)
             %obj.waitUntilDone();
-            obj.getMainResults();
             obj.worker = parfeval(obj.cpuPool,...
-                @obj.par_enableVision,0,obj.loomo,color,colorLarge, depth);
-            obj.runMainLoop()
+                @obj.par_enableVision,0,obj.loomo,color,colorLarge, depth);            
+        end
+        
+        function getImageFun(obj,imgType)
+            obj.worker = parfeval(obj.cpuPool,...
+                @obj.par_getImage,1,obj.loomo,imgType);            
         end
         
         function runMainLoop(obj)
             
-            set.readVelocity = true;
-            set.readSurroundings = true;
+            set.newEnableImages = obj.newEnableImages;
+            if obj.newEnableImages
+               set.colorFast = obj.colorFast;
+               set.colorLarge = obj.colorLarge;
+               set.depth = obj.depth;
+               obj.newEnableImages = false;
+            end
+            
+            set.newEnableDrive = obj.newEnableDrive;
+            if obj.newEnableDrive
+               set.enableDriveValue = obj.enableDriveValue;
+               obj.newEnableDrive = false;
+            end
+            
+            set.newVolume = obj.newVolume;
+            if obj.newVolume
+               set.volume = obj.volume;
+               obj.newVolume = false;
+            end
+            
+            set.newSpeak = obj.newSpeak;
+            if obj.newSpeak
+               set.speakString = obj.speakString; 
+               obj.newSpeak = false;
+            end
+            
+            
+            set.readVelocity = obj.readVelocity;
+            set.readSurroundings = obj.readSurroundings;
             
             set.driveOnKey = obj.driveOnKeys;
             if obj.driveOnKeys
@@ -151,10 +210,23 @@ classdef BackgroundLoomoConnector < handle
                 set.keyNewHead = obj.keyNewHead;
                 set.keyHeadPitch = obj.keyHeadPitch;
                 set.keyHeadYaw = obj.keyHeadYaw;
-                
             end
             %obj.keyVelocity = 0;
             %obj.keyTurnRate = 0;
+            
+            set.getImage = obj.getImage;
+            set.getImage2 = obj.getImage2;
+            obj.fetchImage = false;
+            if obj.getImage >0 || obj.getImage2 >0
+               if mod(obj.imgCount,obj.imgFreq) ~= 0
+                   set.getImage = 0;
+                   set.getImage2 = 0;
+               else
+                   obj.fetchImage = true;
+               end
+               %disp(['Main Run set Image: ',num2str(set.getImage)])
+               obj.imgCount = obj.imgCount+1;
+            end
             
             
             obj.waitUntilDone();
@@ -166,18 +238,37 @@ classdef BackgroundLoomoConnector < handle
         function getMainResults(obj)
             %disp('2-2: Getting Main')
             %obj.worker
-            obj.checkError();
-           data = fetchOutputs(obj.worker);
-           if isfield(data,'sP2d')
-               obj.velocity = data.sP2d.vl;
-               obj.turnRate = data.sP2d.va;
-           end
+            if ~obj.checkError()
+                data = fetchOutputs(obj.worker);
+               if obj.readVelocity && isfield(data,'sP2d')
+                   obj.velocity = data.sP2d.vl;
+                   obj.turnRate = data.sP2d.va;
+                   obj.xBase = data.sP2d.x;
+                   obj.yBase = data.sP2d.y;
+                   obj.thBase = data.sP2d.th;
+               end
+
+               if obj.readSurroundings && isfield(data,'sSur')
+                   obj.ir_left = data.sSur.irl;
+                   obj.ir_right = data.sSur.irr;
+                   obj.uss = data.sSur.uss;
+               end
+               
+               if obj.fetchImage
+                   try
+                       if obj.getImage>0
+                           obj.imgData = data.img;
+                       end
+                       if obj.getImage2 > 0
+                          obj.imgData2 = data.img2; 
+                       end
+                   catch me
+                       warning('Did not find image')
+                       warning(me.message)
+                   end
+               end
+            end
            
-           if isfield(data,'sSur')
-               obj.ir_left = data.sSur.irl;
-               obj.ir_right = data.sSur.irr;
-               obj.uss = data.sSur.uss;
-           end
         end
     end
     
@@ -186,6 +277,22 @@ classdef BackgroundLoomoConnector < handle
     methods (Static)
         function data = mainPar(loomo,set)
            tStart = tic;
+           
+           if set.newEnableDrive
+              loomo.enableDrive(set.enableDriveValue) 
+           end
+           
+           if set.newEnableImages
+              loomo.enableVision(set.colorFast,set.colorLarge,set.depth)
+           end
+           
+           if set.newVolume
+              loomo.setVolume(set.volume);
+           end
+           
+           if set.newSpeak
+              loomo.speakLine(set.speakString); 
+           end
            
            if set.driveOnKey
                loomo.setVelocity(set.keyVelocity,set.keyTurnRate) 
@@ -201,6 +308,13 @@ classdef BackgroundLoomoConnector < handle
            
            if set.readSurroundings
                 data.sSur = loomo.getSurroundings();
+           end
+           
+           if set.getImage > 0
+                data.img = loomo.getImage(set.getImage-1);
+           end
+           if set.getImage2 > 0
+                data.img2 = loomo.getImage(set.getImage2-1);
            end
 
            data.time = toc(tStart);

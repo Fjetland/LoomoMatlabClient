@@ -2,11 +2,11 @@ clear all
 close all
 clc
 
-frameWorkPath = 'frameWork';
+frameWorkPath = '../';
 addpath(frameWorkPath)
 
 loomo = BackgroundLoomoConnector('192.168.137.84',1337);
-
+%%
 loomo.connect()
 
 while ~loomo.isFinished
@@ -14,10 +14,15 @@ while ~loomo.isFinished
    pause(0.5)
 end
 %%
-loomo.enableDrive(true)
-pause(0.5)
+loomo.enableVision(true,false,false)
+
 
 %pause(2)
+%%
+
+loomo.getImageFun(0);
+
+data = loomo.getResult()
 
 %%
 loomo.disconnect()

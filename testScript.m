@@ -4,7 +4,7 @@ clc
 
 %% Open Connection
  
-loomo = Loomo('192.168.137.84',1337);
+loomo = Loomo('192.168.137.110',1337);
 loomo.connect()
  
 %% Close
@@ -50,19 +50,23 @@ set(gca,'CameraPosition',...
  
 %% Set volume
  
- loomo.setVolume(0.3)
+ loomo.setVolume(0.5)
  
 %% speak
  loomo.speakLine('Bye')
  
 %%  Set head position
- loomo.setHeadPosition(pi/5,0)
+ loomo.setHeadPosition(0,pi/5,10)
 
  %% set head and light
  loomo.setHeadPosition(pi/5,0,10)
  
 %% Enable drive 
  loomo.enableDrive(true)
+ 
+ %% set position
+ setPosition(loomo,-1,-3,0)
+ 
  
  %% Enable drive 
  loomo.enableDrive(false)
@@ -90,15 +94,15 @@ set(gca,'CameraPosition',...
 subplot(1,3,1)
 imshow(img)
  
-% subplot(1,3,2:3)
-% pc = depthImageTestScript(imgd,img);
-% pcshow(pc, 'VerticalAxis','Z', 'VerticalAxisDir', 'Up')
-% set(gca,'CameraPosition',...
-%     [-40.6449840206409 17.7065768099007 15.6358440242711],'CameraTarget',...
-%     [2.10383901044505 0.872518623187423 -0.186464174545933],'CameraUpVector',...
-%     [0.325375837966884 -0.135417330350011 0.935837972465439],'Color',[0 0 0],...
-%     'DataAspectRatio',[1 1 1],'XColor',[0.8 0.8 0.8],'YColor',[0.8 0.8 0.8],...
-%     'ZColor',[0.8 0.8 0.8]);
+subplot(1,3,2:3)
+pc = depthImageToPointCloud(imgd,img);
+pcshow(pc, 'VerticalAxis','Z', 'VerticalAxisDir', 'Up')
+set(gca,'CameraPosition',...
+    [-40.6449840206409 17.7065768099007 15.6358440242711],'CameraTarget',...
+    [2.10383901044505 0.872518623187423 -0.186464174545933],'CameraUpVector',...
+    [0.325375837966884 -0.135417330350011 0.935837972465439],'Color',[0 0 0],...
+    'DataAspectRatio',[1 1 1],'XColor',[0.8 0.8 0.8],'YColor',[0.8 0.8 0.8],...
+    'ZColor',[0.8 0.8 0.8]);
 %  
 toc
  %% Get sensor data
