@@ -4,21 +4,53 @@ clc
 
 %% Open Connection
  
-loomo = Loomo('192.168.137.110',1337);
+loomo = Loomo('192.168.137.84',1337);
 loomo.connect()
  
 %% Close
  loomo.disconnect()
  
+ %% Position Array
+ loomo.setPosition(0, 0, pi/2, true)
  %% Enable camera
  loomo.enableVision(true,false,true)
 
   %% Disable camera
  loomo.enableVision(false,false,false)
 
- %%
- f2 = figure('Position',[50,50,1200,800],'Name','3D-Plot')
- %% Get image
+%% Set volume
+ 
+ loomo.setVolume(0.4)
+ 
+%% speak
+ loomo.speakLine('Hello puny human, kneel for your new goddes')
+ 
+%%  Set head position
+ loomo.setHeadPosition(0,pi/5)
+
+ %% set head and light
+ loomo.setHeadPosition(0,pi/6,[],1)
+ 
+%% Enable drive 
+ loomo.enableDrive(true)
+ 
+ %% set position
+ setPosition(loomo,1,-1)
+ 
+ %% set position vls
+ setPosition(loomo,2,-0.2,0,true)
+ 
+ 
+ %% Enable drive 
+ loomo.enableDrive(false)
+%% Set velocity
+ loomo.setVelocity(2,0)
+ 
+%% Set Position
+ loomo.setPosition(0,0,0)
+ 
+ 
+  %% Get image
  %close all
  tic
  imgd = loomo.getImage(2);
@@ -31,50 +63,10 @@ figure(1)
 
 pc2 = pcdenoise(pc);
 pcshow(pc, 'VerticalAxis','Z', 'VerticalAxisDir', 'Up')
-set(gca,'CameraPosition',...
-    [-40.6449840206409 17.7065768099007 15.6358440242711],'CameraTarget',...
-    [2.10383901044505 0.872518623187423 -0.186464174545933],'CameraUpVector',...
-    [0.325375837966884 -0.135417330350011 0.935837972465439],'Color',[0 0 0],...
-    'DataAspectRatio',[1 1 1],'XColor',[0.8 0.8 0.8],'YColor',[0.8 0.8 0.8],...
-    'ZColor',[0.8 0.8 0.8]);
- 
 
 figure(2)
-pcshow(pc, 'VerticalAxis','Z', 'VerticalAxisDir', 'Up')
-set(gca,'CameraPosition',...
-    [-40.6449840206409 17.7065768099007 15.6358440242711],'CameraTarget',...
-    [2.10383901044505 0.872518623187423 -0.186464174545933],'CameraUpVector',...
-    [0.325375837966884 -0.135417330350011 0.935837972465439],'Color',[0 0 0],...
-    'DataAspectRatio',[1 1 1],'XColor',[0.8 0.8 0.8],'YColor',[0.8 0.8 0.8],...
-    'ZColor',[0.8 0.8 0.8]);
- 
-%% Set volume
- 
- loomo.setVolume(0.5)
- 
-%% speak
- loomo.speakLine('Bye')
- 
-%%  Set head position
- loomo.setHeadPosition(0,pi/5,10)
+pcshow(pc2, 'VerticalAxis','Z', 'VerticalAxisDir', 'Up')
 
- %% set head and light
- loomo.setHeadPosition(pi/5,0,10)
- 
-%% Enable drive 
- loomo.enableDrive(true)
- 
- %% set position
- setPosition(loomo,-1,-3,0)
- 
- 
- %% Enable drive 
- loomo.enableDrive(false)
-%% Set velocity
- loomo.setVelocity(0,-0.2)
- 
-%% Set Position
- loomo.setPosition(0,0,0)
  
  %% Start Drive and look
  close all
@@ -106,15 +98,22 @@ set(gca,'CameraPosition',...
 %  
 toc
  %% Get sensor data
+ p = animatedline(0,0);
+ i = 1;
+ while 1
  tic
- sur = loomo.getSurroundings()
- ws = loomo.getWheelSpeed()
- pose = loomo.getPose2D()
- hw = loomo.getHeadWorld()
- hj = loomo.getHeadJoint()
- bp = loomo.getBaseImu()
- bt = loomo.getBaseTick()
- toc
+ sur = loomo.getSurroundings();
+ ws = loomo.getWheelSpeed();
+ pose = loomo.getPose2D();
+ hw = loomo.getHeadWorld();
+ hj = loomo.getHeadJoint();
+ bp = loomo.getBaseImu();
+ bt = loomo.getBaseTick();
+ tt = toc;
+ addpoints(p,i,tt);
+ drawnow()
+ i = i+1;
+ end
  
  %% Calc avg echoTime
 %   avg = 0;

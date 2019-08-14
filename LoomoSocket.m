@@ -17,6 +17,8 @@ classdef LoomoSocket
     properties (Access = private, Hidden = true, Constant)
         ENCODING = 'utf-8'
         BIT_TYPE = 'uint8'
+        
+        maxLength =65535;
     end
     
     
@@ -55,7 +57,7 @@ classdef LoomoSocket
         
          function sendJsonString(obj, string)
             bitArray = obj.string2bytes(string);
-            if length(bitArray)<255
+            if length(bitArray)<obj.maxLength
                obj.sendByteArray(bitArray) 
             else
                 error("String is to long")
@@ -79,7 +81,7 @@ classdef LoomoSocket
     end
     
     % Private methodes
-    methods (Access = protected, Hidden = true)
+    methods %(Access = protected, Hidden = true)
         
         function bytes = string2bytes(obj,string)
             bytes = unicode2native(string,obj.ENCODING);
@@ -91,12 +93,14 @@ classdef LoomoSocket
         
         function sendByteArray(obj,bitArray)
             l = length(bitArray);
-            fwrite(obj.t,[l, bitArray],obj.BIT_TYPE)
+            b1 = bitshift(l,-8);
+            b2 = bitand(l,255); % 255 = 0x00FF - hex2dec('00FF')
+            fwrite(obj.t,[b1, b2, bitArray],obj.BIT_TYPE)
         end
         
         function bytes = readByteArray(obj)
            val = fread(obj.t,1);
-           bytes = fread(obj.t,val);           
+           bytes = fread(obj.t,val,obj.BIT_TYPE);           
         end
             
     end

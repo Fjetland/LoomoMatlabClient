@@ -24,13 +24,16 @@ classdef Loomo
        A_VELOCITY_LINEAR = 'v'
        
        A_POSITION = 'pos'
+       A_POSITION_ARRAY = 'posar';
        A_POSITION_X = 'x'
        A_POSITION_Y = 'y'
        A_POSITION_TH = 'th'
        A_POSITION_ADD = 'add'
+       A_POSITION_VLS = 'vls'
        
        A_SPEAK = 'spk';
        A_SPEAK_LENGTH = 'l';
+       A_SPEAK_STRING = 's'
        A_SPEAK_QUE = 'q';
        A_SPEAK_PITCH = 'p';
        A_SPEAK_QUE_DEFAULT = 0; % Play now, (0 play now, 1 play after)
@@ -99,6 +102,8 @@ classdef Loomo
             obj.loomoPort = loomoPort;
             obj.socket = LoomoSocket(loomoIp,loomoPort);
             obj.socket.t.InputBufferSize = 1000000;
+            obj.socket.t.OutputBufferSize = 65535;
+            
         end
         
         function connect(obj)
@@ -155,7 +160,7 @@ classdef Loomo
             obj.socket.sendJsonString(jsE);
         end
         
-        function setPosition(obj,x,y, th)
+        function setPosition(obj,x,y, th, add, vls)
             %setPosition Move Loomo to absolute pose from current pose
             %   setPosition(x,y) moves Loomo to the absolute position [x,y]
             %   in meters, based on it's current referance frame. 
@@ -169,18 +174,30 @@ classdef Loomo
             %       y-axis: Positve to the left
             %       th: CCW rotation in radians around its own z-axis
             %
-            jsR.(obj.ACTION) = obj.A_POSITION;
+            if length(x)>1
+               jsR.(obj.ACTION) = obj.A_POSITION_ARRAY;
+            else
+                jsR.(obj.ACTION) = obj.A_POSITION;
+            end
             jsR.(obj.A_POSITION_X) = x;
             jsR.(obj.A_POSITION_Y) = y;
-            if nargin > 3
+            if nargin > 3 && ~isempty(th)
                jsR.(obj.A_POSITION_TH) = th;
+            end
+            
+            if nargin > 4 && ~isempty(add)
+               jsR.(obj.A_POSITION_ADD) = add;
+            end
+            
+            if nargin > 5 && ~isempty(vls)
+               jsR.(obj.A_POSITION_VLS) = vls;
             end
             
             jsE = jsonencode(jsR);
             obj.socket.sendJsonString(jsE)
         end
         
-        function setHeadPosition(obj, yaw, pitch, light)
+        function setHeadPosition(obj, yaw, pitch, light, mode)
             %setHeadPosition Sets the head position
             %   Sets the head position with yaw and pitch given in radiens.
             %
@@ -192,8 +209,12 @@ classdef Loomo
             jsR.(obj.A_HEAD_PITCH) = round(pitch,4);
             jsR.(obj.A_HEAD_YAW) = round(yaw,4);
             
-            if nargin > 3
+            if nargin > 3 && ~isempty(light)
                jsR.(obj.A_HEAD_LIGHT) = light; 
+            end
+            
+            if nargin > 4 && ~isempty(mode)
+               jsR.('m') = mode; 
             end
 
             jsE = jsonencode(jsR);
@@ -205,10 +226,10 @@ classdef Loomo
             %   Sends a string of text in english for the loomo to speak.
             jsR.(obj.ACTION) = obj.A_SPEAK;
             jsR.(obj.A_SPEAK_LENGTH) = length(string);
-            
-            jsE = jsonencode(jsR);            
+            jsR.(obj.A_SPEAK_STRING) = string;
+            jsE = jsonencode(jsR)            
             obj.socket.sendJsonString(jsE);
-            obj.socket.sendFollowUpString(string);
+            %obj.socket.sendFollowUpString(string);
         end
         
         function setVolume(obj,volume)
