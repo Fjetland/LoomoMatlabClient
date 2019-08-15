@@ -1,6 +1,69 @@
 classdef Loomo < handle 
-    %LOOMO Summary of this class goes here
-    %   Detailed explanation goes here
+    %LOOMO Loomo class connects and commands a loomo over a network connection.
+    %   
+    %   This class handles communication with a Loomo roboticks trough the
+    %   LoomoSocketServer app (link below). To work it needs to be in the
+    %   project path and together with the LoomoSocket class.
+    %
+    %   By default (sendDirectly == false) the class works by building a
+    %   sequences of actions and/or data requests trugh the listed
+    %   methods below. The 'send()' command then requests the loomo to
+    %   execute the requested commands. If data is requested this can be
+    %   read trugh the 'recive()' method.
+    %
+    %   Note: The getImage(id) function will always directly request and
+    %   return a image (if available) from the loomo. As such it can not be
+    %   executed between a 'send()' and 'recive()' command if responce data
+    %   is expected.
+    %
+    %   Example:
+    %   *****************************************************************
+    %   loomo = Loomo('loo.mo.ip.here',port); %Create a Loomo object
+    %   loomo.connect() % Connects to Loomo
+    %
+    %   loomo.enableDrive(true) %enable drive functionality
+    %
+    %   % Make loomo drive in a 0.5m x 0.5m square 
+    %   loomo.setPosition([0.5,0.5,0,0],[0,0.5,0.5,0],[pi/2,pi,-pi/2,0])
+    %
+    %   loomo.setVolume(0.4) %set Volume   
+    %   loomo.speakLine('Hello Students. I will now demonstrate my walking abilities')
+    %   
+    %   loomo.getSurroundings()
+    %
+    %   loomo.send() % Send the selected commands to loomo
+    %   loomo.recive()% Read requested data
+    %  
+    %   disp('Ultrasonic distance messured [mm]')
+    %   disp(loomo.sensorDistanceFront)
+    %
+    %   pause(30) %wait to allow loomo to move
+    %
+    %   loomo.disconnect()
+    %
+    %   ********************** END EXAMPLE ******************************
+    %
+    %   Git: https://github.com/Fjetland/LoomoMatlabClient
+    %
+    %   LoomoSocketServerApp:
+    %   Git: https://github.com/Fjetland/LoomoSocketServer/
+    %
+    %	
+    %   @ 2019 University of Agder
+    %   By: Andreas K Fjetland
+    %   
+    %   Managed by: Morten Rudolfsen
+    %
+    %   Edited by: (Enter here on revisions)
+    %       *Name @date - Place
+    %
+    %   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
+    %   EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF 
+    %   MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+    %   IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR 
+    %   ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
+    %   CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION 
+    %   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
     
     properties
         loomoIp    char % Loomo Ip adress
@@ -138,7 +201,7 @@ classdef Loomo < handle
         %%%                %%%
         function obj = Loomo(loomoIp,loomoPort)
             %LOOMO Construct an instance of this class
-            %   Detailed explanation goes here
+            %   Create a loomo object with the given ip and port adress
             obj.loomoIp = loomoIp;
             obj.loomoPort = loomoPort;
             obj.socket = LoomoSocket(loomoIp,loomoPort);
@@ -160,6 +223,12 @@ classdef Loomo < handle
         end
         
         function send(obj)
+            %send() Sends the planned commandes to the loomo robot for
+            %execution
+            %
+            % Send do not need to be used if sendDirectly is set to true,
+            % this is however not reccomended due to latency
+            
            if ~isempty(obj.sendStructure)
               obj.socket.flush();
               obj.sendStructure.(obj.ACTION) = obj.A_SEQUENCE;
@@ -176,6 +245,10 @@ classdef Loomo < handle
         end
         
         function recive(obj)
+            %recive() reads the inncomming data from the loomo and
+            %populates the object with recived data readings
+            %
+            %   Used only if data is requsted trugh a get method
             if obj.dataIsRequested
                 data = obj.socket.reciveJsonString();
                 data = jsondecode(data);
@@ -227,6 +300,8 @@ classdef Loomo < handle
         end
         
         function clearSendQue(obj)
+            %clearSendQue() flushes the tcp input buffer 
+            
            obj.sendStructure = []; 
         end
         
