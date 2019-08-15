@@ -1,10 +1,13 @@
 function pc = depthImageToPointCloud(imgd,img)
-ircFOVh = 59*pi/180;
-ircFOVv = 48*pi/180;
+%depthImageToPointCloud(imgd,img) Inneficient and innacurate way of
+%   combining a depth and color image to a matlab point cloud
 
-ircMaxD = 2.8;
-ircMaxB = hex2dec('FFFF');
-imgD = imgd*ircMaxD/ircMaxB;
+ircFOVh = 59*pi/180; % Depth Camera field of view
+ircFOVv = 48*pi/180; % Depth Camera field of view
+
+ircMaxD = 2.8; % Depth max camera
+ircMaxB = hex2dec('FFFF'); % Depth max value
+imgD = imgd*ircMaxD/ircMaxB; % Assume max depth is max value ;)
 
 % Calc X, Y, Z from Base
 % Y axis in picture is inverted
@@ -24,9 +27,9 @@ y=zeros(width*height,1);
 z=zeros(width*height,1);
 color=zeros(width*height,3);
 for yp = 1:width
-    angleH = (center(2)-yp)/center(2)*ircFOVh;
+    angleH = (center(2)-yp)/center(2)*ircFOVh; % Assume pixles evenly spaced :)
     for zp = 1:height
-        angleV = (center(1)-zp)/center(1)*ircFOVv;
+        angleV = (center(1)-zp)/center(1)*ircFOVv; % Assume pixles evenly spaced :)
         d = imgD(zp,yp);
         y(count) = cameraYaxis*sign(angleH)*d*tan(abs(angleH));
         z(count) = sign(angleV)*d*tan(abs(angleV))+cameraHeight;

@@ -4,11 +4,30 @@ clc
 
 %% Open Connection
  
-loomo = Loomo('192.168.137.84',1337);
+loomo = Loomo('192.168.137.110',1337);
 loomo.connect()
  
 %% Close
  loomo.disconnect()
+ 
+ %% 
+ 
+ 
+ %% Send position array
+ loomo.enableDrive(true)
+ loomo.setVolume(0.5) 
+ loomo.setPosition([1,2,3,4],[1,0,1,0],[0,0,0,0],[],true)
+ 
+ %% Test sequence
+ %loomo.enableDrive(true)
+ %loomo.setVelocity(0,0.5)
+ loomo.setPosition(-0.5,0.3, -pi/4, false)
+ loomo.getPose2D()
+ loomo.send()
+ loomo.recive()
+ clc
+ fprintf("Velocity:  %0.2f\nTurn Rate: %0.2f\n",loomo.sensorBaseVelocity, loomo.sensorBaseTurnRate)
+
  
  %% Position Array
  loomo.setPosition(0, 0, pi/2, true)
@@ -20,7 +39,7 @@ loomo.connect()
 
 %% Set volume
  
- loomo.setVolume(0.4)
+ loomo.setVolume(0.2)
  
 %% speak
  loomo.speakLine('Hello puny human, kneel for your new goddes')
@@ -32,7 +51,7 @@ loomo.connect()
  loomo.setHeadPosition(0,pi/6,[],1)
  
 %% Enable drive 
- loomo.enableDrive(true)
+ loomo.enableDrive(false)
  
  %% set position
  setPosition(loomo,1,-1)
@@ -46,6 +65,7 @@ loomo.connect()
 %% Set velocity
  loomo.setVelocity(2,0)
  
+ 
 %% Set Position
  loomo.setPosition(0,0,0)
  
@@ -56,9 +76,9 @@ loomo.connect()
  imgd = loomo.getImage(2);
  img = loomo.getImage(0);
  toc
-
+tic
 pc = depthImageToPointCloud(imgd,img);
-
+toc
 figure(1)
 
 pc2 = pcdenoise(pc);
@@ -97,10 +117,14 @@ set(gca,'CameraPosition',...
     'ZColor',[0.8 0.8 0.8]);
 %  
 toc
- %% Get sensor data
+ %% Get sensor data traditional
+ % avg speed old 0.4-0.6 s peaks at 1-3 s
+ %close all
+ figure(2)
  p = animatedline(0,0);
  i = 1;
- while 1
+ loomo.sendDirectly = true;
+ while i<100
  tic
  sur = loomo.getSurroundings();
  ws = loomo.getWheelSpeed();
@@ -108,10 +132,35 @@ toc
  hw = loomo.getHeadWorld();
  hj = loomo.getHeadJoint();
  bp = loomo.getBaseImu();
- bt = loomo.getBaseTick();
+ bt = loomo.getWheelTick();
  tt = toc;
  addpoints(p,i,tt);
  drawnow()
+ i = i+1;
+ end
+ 
+  %% Get sensor data Sequence
+ % avg speed 
+ close all
+ figure(1)
+ p = animatedline(0,nan);
+ i = 1;
+ 
+ while i<100
+ tic
+ loomo.recive();
+ loomo.getSurroundings();
+ loomo.getWheelSpeed();
+ loomo.getPose2D();
+ loomo.getHeadWorld();
+ loomo.getHeadJoint();
+ loomo.getBaseImu();
+ loomo.getBaseTick();
+ loomo.send();
+ tt = toc;
+ addpoints(p,i,tt);
+ drawnow()
+ tArray(i) = tt;
  i = i+1;
  end
  

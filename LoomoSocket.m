@@ -1,7 +1,10 @@
-classdef LoomoSocket
+classdef LoomoSocket < handle
     %LoomoSocket Communicates with your loomo over WiFi
-    %   Detailed explanation wil be filled in here
-    %   Test
+    %   Loomo socket is a class for handeling string and byte communication
+    %   with the LoomoSocketServerApp. The protocoles displayed here for
+    %   reading and writing bytes is mached with the LoomoSockedServerApp
+    %   and they must be changed in unison.
+    %
     
     % Constants   
     properties (Access = public)
@@ -34,10 +37,9 @@ classdef LoomoSocket
         function open(obj)
             %open Open the TCP connection
             %   Opens the TCP connection, takes no arguments
-            disp('Trying to connect...')
             try
                 fopen(obj.t);
-                disp('Connected to Loomo')
+                %disp('Connected to Loomo')
             catch e
                 disp('Connection failed...')
                 error(e.message)
@@ -56,6 +58,7 @@ classdef LoomoSocket
         end
         
          function sendJsonString(obj, string)
+             % sendJsonString(obj, string)
             bitArray = obj.string2bytes(string);
             if length(bitArray)<obj.maxLength
                obj.sendByteArray(bitArray) 
@@ -69,13 +72,17 @@ classdef LoomoSocket
             string = obj.bytes2string(bytes);
          end
          
-         function sendFollowUpString(obj,string)
-            bytes = obj.string2bytes(string);
-            fwrite(obj.t,bytes,obj.BIT_TYPE)
-         end
+%          function sendFollowUpString(obj,string)
+%             bytes = obj.string2bytes(string);
+%             fwrite(obj.t,bytes,obj.BIT_TYPE)
+%          end
          
          function bytes = readLongByteArray(obj, length)
             bytes = fread(obj.t,length); 
+         end
+         
+         function flush(obj)
+            flushinput(obj.t)
          end
         
     end
@@ -99,10 +106,10 @@ classdef LoomoSocket
         end
         
         function bytes = readByteArray(obj)
-           val = fread(obj.t,1);
-           bytes = fread(obj.t,val,obj.BIT_TYPE);           
+           val = fread(obj.t,2);
+           length = bitor(bitshift(val(1),8),val(2));
+           bytes = fread(obj.t,length,obj.BIT_TYPE);           
         end
-            
     end
 end
 
