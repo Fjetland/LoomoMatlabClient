@@ -5,6 +5,28 @@ classdef LoomoSocket < handle
     %   reading and writing bytes is mached with the LoomoSockedServerApp
     %   and they must be changed in unison.
     %
+    %   Used together with the Loomo class provided in the same repository:
+    %
+    %   Git: https://github.com/Fjetland/LoomoMatlabClient
+    %
+    %   LoomoSocketServerApp:
+    %   Git: https://github.com/Fjetland/LoomoSocketServer/
+    %
+    %	Created by: Andreas K Fjetland
+    %   @ 2019 University of Agder
+    %
+    %   Managed by: Morten Rudolfsen
+    %
+    %   Edited by: (Enter here on revisions)
+    %       *Name @date - Place
+    %
+    %   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
+    %   EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF 
+    %   MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+    %   IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR 
+    %   ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
+    %   CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION 
+    %   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
     
     % Constants   
     properties (Access = public)

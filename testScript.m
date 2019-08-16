@@ -16,12 +16,12 @@ loomo.connect()
  %% Send position array
  loomo.enableDrive(true)
  loomo.setVolume(0.5) 
- loomo.setPosition([1,2,3,4],[1,0,1,0],[0,0,0,0],[],true)
+ loomo.setPosition([1,2,3,4,0],[1,0,1,0,0],[0,0,0,0,0],false,true)
  
  %% Test sequence
  %loomo.enableDrive(true)
  %loomo.setVelocity(0,0.5)
- loomo.setPosition(-0.5,0.3, -pi/4, false)
+ %loomo.setPosition(-0.5,0.3, -pi/4, false)
  loomo.getPose2D()
  loomo.send()
  loomo.recive()
